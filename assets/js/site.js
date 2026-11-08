@@ -205,7 +205,6 @@
     $$('[data-marquee],[data-rotate],[data-sweep]').forEach(el => loopIo.observe(el));
     scrollFx();
   }
-  if (root.classList.contains('is-ready')) startReveals();
 
   // ═══ scroll-driven effects: one passive listener, work only in an animation frame ═══
   // words not yet "filled" stay readable: 0.45 keeps ≥ 3:1 contrast for this large text (the design used 0.14)
@@ -249,6 +248,9 @@
   addEventListener('resize', onScroll, { passive: true });
   if (header && PAGE !== 'home') root.classList.add('is-solid');
   scrollFx();
+  // a page shown at once (phones, reduced motion, back/forward) starts its reveals now — after everything
+  // scrollFx() uses is defined (startReveals calls it)
+  if (root.classList.contains('is-ready')) startReveals();
 
   // ═══ pointer: custom cursor, magnetic buttons, tilt cards (real mouse only) ═══
   if (FINE && !R) {
