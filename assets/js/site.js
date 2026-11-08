@@ -42,7 +42,8 @@
     a.finished.then(() => { [curA, curB].forEach(el => el.getAnimations().forEach(x => x.cancel())); done(); }, done);
   }
   if (curLabel) curLabel.textContent = navLabel || '';
-  if (R) { root.classList.add('is-ready'); }
+  const touch = !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (R || touch) { root.classList.add('is-ready'); }   // phones/tablets: page shown at once (curtain only on leaving)
   else if (navLabel !== null || !firstVisit) {
     if (curNum) curNum.textContent = '→';
     if (curBar) curBar.style.transform = 'scaleX(1)';
