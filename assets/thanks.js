@@ -28,11 +28,15 @@ const VIEW = {
   offline:  ['Не вдалося перевірити статус', 'Перевірте з\'єднання та оновіть сторінку або напишіть менеджеру.'],
 };
 
+// card look: spinner while waiting, a check for a good outcome, "!" for the rest (failed/expired also offer a retry)
+const LOOK = { paid: 'ok', cod: 'ok', unpaid: 'pending', reversed: 'bad', unknown: 'bad', offline: 'bad', failed: 'retry', expired: 'retry' };
+
 function show(key, bot) {
   const [title, text] = VIEW[key];
   $('statusTitle').textContent = title;
   $('statusText').textContent = text;
   $('statusSpinner').hidden = key === 'unpaid' ? false : true;
+  $('statusCard').dataset.status = LOOK[key];
   if (bot && /^[A-Za-z0-9_]{5,32}$/.test(bot)) $('trackBtn').href = `https://t.me/${bot}?start=o_${ref}`;
 }
 
@@ -53,21 +57,10 @@ async function poll(n) {
   else if (key === 'unpaid') $('statusSpinner').hidden = true;
 }
 
-// Browser Purchase (needs cookie consent). The server sends the same event with the same event_id from the
-// monobank webhook (the source of truth); this guard only stops re-sending on reloads of this page.
+// Browser Purchase for a paid online order (needs cookie consent). The server sends the same event with the
+// same event_id from the monobank webhook (the source of truth); LabroPixel.purchase() fires it once per order.
 function trackPurchase(p) {
-  if (!window.LabroPixel || !/^[0-9a-f]{32}$/.test(p.event_id || '')) return;
-  const KEY = 'labro_px_purchases';
-  let done = [];
-  try { done = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (_) { done = []; }
-  if (!Array.isArray(done)) done = [];
-  if (done.includes(p.event_id)) return;
-  const sent = window.LabroPixel.track('Purchase', {
-    value: p.value, currency: p.currency, num_items: p.num_items,
-    content_ids: ['neuro-balance'], content_type: 'product',
-  }, p.event_id);
-  if (!sent) return;
-  try { localStorage.setItem(KEY, JSON.stringify(done.concat(p.event_id).slice(-20))); } catch (_) { /* ignore */ }
+  if (window.LabroPixel) window.LabroPixel.purchase(p);
 }
 
 poll(0);
